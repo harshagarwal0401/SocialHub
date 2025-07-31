@@ -16,6 +16,7 @@ yarn-error.log*
 .env.production.local
 /backend/config.env
 
+
 # Logs
 logs
 *.log
@@ -102,3 +103,5 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp 
+
+

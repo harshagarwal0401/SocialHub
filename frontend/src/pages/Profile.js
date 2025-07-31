@@ -45,7 +45,7 @@ const Profile = () => {
       setUploadingImage(false);
       
       if (result.success) {
-        fetchUserPosts(); // Refresh posts to update author info
+        fetchUserPosts(); 
       }
     }
   };
