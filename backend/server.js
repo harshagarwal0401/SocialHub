@@ -31,7 +31,7 @@ app.use(limiter);
 // CORS
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? ['social-hub-omega-vert.vercel.app'] 
+    ? ['https://social-hub-omega-vert.vercel.app'] 
     : 'http://localhost:3000',
   credentials: true
 }));
