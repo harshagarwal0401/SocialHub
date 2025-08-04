@@ -259,7 +259,7 @@ This project is licensed under the MIT License.
 
 ## 🙏 Acknowledgments
 
-- Built with the MERN stack
+- Built with love by harsh agarwal
 - Styled with Tailwind CSS
 - Icons from React Icons
 - Notifications with React Hot Toast
