@@ -1,4 +1,4 @@
-import React, { useState, useEffect ,useCallback } from 'react';
+import React, { useState, useEffect  } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
@@ -18,7 +18,7 @@ const Users = () => {
     fetchUsers();
   }, [page]);
 
-  const fetchUsers = useCallback(async () => {
+  const fetchUsers = async () => {
     try {
       setLoading(true);
       const response = await axios.get(`/api/users?page=${page}&limit=12`);
