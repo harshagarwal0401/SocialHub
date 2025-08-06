@@ -5,6 +5,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { FaUserPlus, FaUserCheck, FaUsers, FaHeart } from 'react-icons/fa';
 import PostCard from '../components/PostCard';
+import UserListModal from '../components/UserListModal';
 
 const UserProfile = () => {
   const { id } = useParams();
@@ -14,6 +15,33 @@ const UserProfile = () => {
   const [loading, setLoading] = useState(true);
   const [following, setFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+
+  const [showModal, setShowModal] = useState(false);
+const [modalTitle, setModalTitle] = useState('');
+const [modalUsers, setModalUsers] = useState([]);
+
+const handleShowFollowers = async () => {
+  try {
+    const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/users/${id}/followers`);
+    setModalTitle('Followers');
+    setModalUsers(res.data.followers);
+    setShowModal(true);
+  } catch (err) {
+    toast.error('Failed to load followers');
+  }
+};
+
+const handleShowFollowing = async () => {
+  try {
+    const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/users/${id}/following`);
+    setModalTitle('Following');
+    setModalUsers(res.data.following);
+    setShowModal(true);
+  } catch (err) {
+    toast.error('Failed to load following');
+  }
+};
+
 
   useEffect(() => {
     fetchUserProfile();
@@ -148,19 +176,20 @@ const UserProfile = () => {
 
             {/* Stats */}
             <div className="flex items-center space-x-6 text-sm text-gray-500">
-              <div className="flex items-center space-x-1">
-                <FaUsers className="w-4 h-4" />
-                <span>{user.followerCount || 0} followers</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <FaUsers className="w-4 h-4" />
-                <span>{user.followingCount || 0} following</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <FaHeart className="w-4 h-4" />
-                <span>{posts.length} posts</span>
-              </div>
-            </div>
+  <div className="flex items-center space-x-1 cursor-pointer" onClick={handleShowFollowers}>
+    <FaUsers className="w-4 h-4" />
+    <span>{user.followerCount || 0} followers</span>
+  </div>
+  <div className="flex items-center space-x-1 cursor-pointer" onClick={handleShowFollowing}>
+    <FaUsers className="w-4 h-4" />
+    <span>{user.followingCount || 0} following</span>
+  </div>
+  <div className="flex items-center space-x-1">
+    <FaHeart className="w-4 h-4" />
+    <span>{posts.length} posts</span>
+  </div>
+</div>
+
 
             {/* Member Since */}
             <div className="mt-4 text-sm text-gray-500">
@@ -202,6 +231,14 @@ const UserProfile = () => {
           </div>
         )}
       </div>
+      {showModal && (
+  <UserListModal
+    title={modalTitle}
+    users={modalUsers}
+    onClose={() => setShowModal(false)}
+  />
+)}
+
     </div>
   );
 };

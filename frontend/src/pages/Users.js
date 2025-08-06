@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { FaUserPlus, FaUserCheck, FaSearch } from 'react-icons/fa';
+// Add modal state
+import { Fragment } from 'react';
 
 const Users = () => {
   const { user: currentUser } = useAuth();
@@ -13,6 +15,11 @@ const Users = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [followingStates, setFollowingStates] = useState({});
+  // Add modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+  const [listUsers, setListUsers] = useState([]);
+  const [listLoading, setListLoading] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -63,6 +70,22 @@ const Users = () => {
     } catch (error) {
       console.error('Error following/unfollowing:', error);
       toast.error('Failed to update follow status');
+    }
+  };
+
+  // Handler to fetch and show followers/following list
+  const handleShowList = async (userId, type) => {
+    setModalTitle(type === 'followers' ? 'Followers' : 'Following');
+    setModalOpen(true);
+    setListLoading(true);
+    setListUsers([]);
+    try {
+      const res = await axios.get(`/api/users/${userId}/${type}`);
+      setListUsers(res.data[type]); // followers or following
+    } catch (err) {
+      toast.error('Failed to load list');
+    } finally {
+      setListLoading(false);
     }
   };
 
@@ -134,8 +157,18 @@ const Users = () => {
 
               {/* Stats */}
               <div className="flex justify-center space-x-4 text-sm text-gray-500 mb-4">
-                <span>{user.followerCount || 0} followers</span>
-                <span>{user.followingCount || 0} following</span>
+                <span
+                  className="cursor-pointer hover:underline"
+                  onClick={() => handleShowList(user._id, 'followers')}
+                >
+                  {user.followerCount || 0} followers
+                </span>
+                <span
+                  className="cursor-pointer hover:underline"
+                  onClick={() => handleShowList(user._id, 'following')}
+                >
+                  {user.followingCount || 0} following
+                </span>
               </div>
 
               {/* Follow Button */}
@@ -194,6 +227,34 @@ const Users = () => {
           >
             {loading ? 'Loading...' : 'Load More Users'}
           </button>
+        </div>
+      )}
+
+      {/* Modal for followers/following list */}
+      {modalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-80 max-h-[70vh] overflow-y-auto relative">
+            <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onClick={() => setModalOpen(false)}>
+              &times;
+            </button>
+            <h2 className="text-xl font-bold mb-4 text-center">{modalTitle}</h2>
+            {listLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+              </div>
+            ) : listUsers.length === 0 ? (
+              <p className="text-gray-500 text-center">No users found.</p>
+            ) : (
+              <ul>
+                {listUsers.map(u => (
+                  <li key={u._id} className="mb-3 flex items-center">
+                    <img src={u.profilePicture || 'https://via.placeholder.com/40x40?text=U'} alt={u.name} className="w-8 h-8 rounded-full mr-3" />
+                    <span>{u.name}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       )}
     </div>
