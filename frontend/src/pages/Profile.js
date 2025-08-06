@@ -4,6 +4,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { FaEdit, FaCamera, FaSave, FaTimes } from 'react-icons/fa';
 import PostCard from '../components/PostCard';
+import UserListModal from '../components/UserListModal';
 
 const Profile = () => {
   const { user, updateProfile, uploadProfilePicture } = useAuth();
@@ -15,6 +16,10 @@ const Profile = () => {
     bio: user?.bio || ''
   });
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalUsers, setModalUsers] = useState([]);
+  const [modalLoading, setModalLoading] = useState(false);
 
   useEffect(() => {
     fetchUserPosts();
@@ -87,6 +92,21 @@ const Profile = () => {
     } catch (error) {
       console.error('Error deleting post:', error);
       toast.error('Failed to delete post');
+    }
+  };
+
+  const handleShowList = async (type) => {
+    setModalTitle(type === 'followers' ? 'Followers' : 'Following');
+    setShowModal(true);
+    setModalLoading(true);
+    setModalUsers([]);
+    try {
+      const res = await axios.get(`/api/users/${user._id}/${type}`);
+      setModalUsers(res.data[type]); // followers or following
+    } catch (err) {
+      toast.error('Failed to load list');
+    } finally {
+      setModalLoading(false);
     }
   };
 
@@ -183,8 +203,18 @@ const Profile = () => {
                   <p className="text-gray-600 mb-4">{user.bio}</p>
                 )}
                 <div className="flex items-center space-x-6 text-sm text-gray-500">
-                  <span>{user?.followerCount || 0} followers</span>
-                  <span>{user?.followingCount || 0} following</span>
+                  <span
+                    className="cursor-pointer hover:underline"
+                    onClick={() => handleShowList('followers')}
+                  >
+                    {user?.followerCount || 0} followers
+                  </span>
+                  <span
+                    className="cursor-pointer hover:underline"
+                    onClick={() => handleShowList('following')}
+                  >
+                    {user?.followingCount || 0} following
+                  </span>
                   <span>{posts.length} posts</span>
                 </div>
               </div>
@@ -219,6 +249,14 @@ const Profile = () => {
           </div>
         )}
       </div>
+      {showModal && (
+        <UserListModal
+          title={modalTitle}
+          users={modalUsers}
+          loading={modalLoading}
+          onClose={() => setShowModal(false)}
+        />
+      )}
     </div>
   );
 };
