@@ -19,28 +19,23 @@ const UserProfile = () => {
   const [showModal, setShowModal] = useState(false);
 const [modalTitle, setModalTitle] = useState('');
 const [modalUsers, setModalUsers] = useState([]);
+const [modalLoading, setModalLoading] = useState(false);
 
-const handleShowFollowers = async () => {
-  try {
-    const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/users/${id}/followers`);
-    setModalTitle('Followers');
-    setModalUsers(res.data.followers);
+  // Unified handler for showing followers/following
+  const handleShowList = async (type) => {
+    setModalTitle(type === 'followers' ? 'Followers' : 'Following');
     setShowModal(true);
-  } catch (err) {
-    toast.error('Failed to load followers');
-  }
-};
-
-const handleShowFollowing = async () => {
-  try {
-    const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/users/${id}/following`);
-    setModalTitle('Following');
-    setModalUsers(res.data.following);
-    setShowModal(true);
-  } catch (err) {
-    toast.error('Failed to load following');
-  }
-};
+    setModalLoading(true);
+    setModalUsers([]);
+    try {
+      const res = await axios.get(`/api/users/${id}/${type}`);
+      setModalUsers(res.data[type]); // followers or following
+    } catch (err) {
+      toast.error('Failed to load list');
+    } finally {
+      setModalLoading(false);
+    }
+  };
 
 
   useEffect(() => {
@@ -176,19 +171,19 @@ const handleShowFollowing = async () => {
 
             {/* Stats */}
             <div className="flex items-center space-x-6 text-sm text-gray-500">
-  <div className="flex items-center space-x-1 cursor-pointer" onClick={handleShowFollowers}>
-    <FaUsers className="w-4 h-4" />
-    <span>{user.followerCount || 0} followers</span>
-  </div>
-  <div className="flex items-center space-x-1 cursor-pointer" onClick={handleShowFollowing}>
-    <FaUsers className="w-4 h-4" />
-    <span>{user.followingCount || 0} following</span>
-  </div>
-  <div className="flex items-center space-x-1">
-    <FaHeart className="w-4 h-4" />
-    <span>{posts.length} posts</span>
-  </div>
-</div>
+              <div className="flex items-center space-x-1 cursor-pointer hover:underline" onClick={() => handleShowList('followers')}>
+                <FaUsers className="w-4 h-4" />
+                <span>{user.followerCount || 0} followers</span>
+              </div>
+              <div className="flex items-center space-x-1 cursor-pointer hover:underline" onClick={() => handleShowList('following')}>
+                <FaUsers className="w-4 h-4" />
+                <span>{user.followingCount || 0} following</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <FaHeart className="w-4 h-4" />
+                <span>{posts.length} posts</span>
+              </div>
+            </div>
 
 
             {/* Member Since */}
@@ -231,13 +226,15 @@ const handleShowFollowing = async () => {
           </div>
         )}
       </div>
+      {/* Modal for followers/following list */}
       {showModal && (
-  <UserListModal
-    title={modalTitle}
-    users={modalUsers}
-    onClose={() => setShowModal(false)}
-  />
-)}
+        <UserListModal
+          title={modalTitle}
+          users={modalUsers}
+          loading={modalLoading}
+          onClose={() => setShowModal(false)}
+        />
+      )}
 
     </div>
   );
