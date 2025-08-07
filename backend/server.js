@@ -29,10 +29,12 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // CORS
+const allowedOrigins = [
+  'https://social-hub-omega-vert.vercel.app',
+  'http://localhost:3000',
+];
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://social-hub-omega-vert.vercel.app'] 
-    : 'http://localhost:3000',
+  origin: allowedOrigins,
   credentials: true
 }));
 

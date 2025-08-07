@@ -41,6 +41,15 @@ const userSchema = new mongoose.Schema({
   isVerified: {
     type: Boolean,
     default: false
+  },
+  role: {
+    type: Number,
+    enum: [1, 2],
+    default: 2 // Default to regular user for new users
+  },
+  isActive: {
+    type: Boolean,
+    default: true
   }
 }, {
   timestamps: true,

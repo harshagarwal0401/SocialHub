@@ -38,7 +38,8 @@ router.post('/register', [
     user = new User({
       name,
       email,
-      password
+      password,
+      role: 2 // All new users are regular users
     });
 
     await user.save();
@@ -76,6 +77,9 @@ router.post('/login', [
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
+    }
+    if (user.isActive === false) {
+      return res.status(403).json({ message: 'Admin deactivated your account' });
     }
 
     // Check password

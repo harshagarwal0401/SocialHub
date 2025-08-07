@@ -6,6 +6,14 @@ const auth = require('../middleware/auth');
 
 const router = express.Router();
 
+// Admin middleware to check for role 1
+function adminOnly(req, res, next) {
+  if (req.user.role !== 1) {
+    return res.status(403).json({ message: 'Admin access required' });
+  }
+  next();
+}
+
 // @route   GET /api/users
 // @desc    Get all users (for discovery)
 // @access  Private
@@ -16,7 +24,7 @@ router.get('/', auth, async (req, res) => {
     const skip = (page - 1) * limit;
 
     const users = await User.find({ _id: { $ne: req.user._id } })
-      .select('name email profilePicture bio followerCount followingCount')
+      .select('name email profilePicture bio followerCount followingCount role isActive')
       .limit(limit)
       .skip(skip)
       .sort({ createdAt: -1 });
@@ -201,6 +209,46 @@ router.get('/:id/following', auth, async (req, res) => {
     res.json({ following: user.following });
   } catch (error) {
     console.error('Get following error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   PATCH /api/users/:id/deactivate
+// @desc    Deactivate a user (admin only)
+// @access  Private/Admin
+router.patch('/:id/deactivate', auth, adminOnly, async (req, res) => {
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { isActive: false },
+      { new: true }
+    ).select('-password');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({ message: 'User deactivated', user });
+  } catch (error) {
+    console.error('Deactivate user error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   PATCH /api/users/:id/activate
+// @desc    Activate a user (admin only)
+// @access  Private/Admin
+router.patch('/:id/activate', auth, adminOnly, async (req, res) => {
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { isActive: true },
+      { new: true }
+    ).select('-password');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({ message: 'User activated', user });
+  } catch (error) {
+    console.error('Activate user error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

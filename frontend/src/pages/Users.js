@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { FaUserPlus, FaUserCheck, FaSearch } from 'react-icons/fa';
+import { FaUserPlus, FaUserCheck, FaSearch, FaUserSlash, FaUserShield } from 'react-icons/fa';
 // Add modal state
 import { Fragment } from 'react';
 
@@ -86,6 +86,19 @@ const Users = () => {
       toast.error('Failed to load list');
     } finally {
       setListLoading(false);
+    }
+  };
+
+  // Add deactivate/activate handler for admin
+  const handleToggleActive = async (user) => {
+    if (!currentUser || currentUser.role !== 1) return;
+    try {
+      const action = user.isActive ? 'deactivate' : 'activate';
+      await axios.patch(`/api/users/${user._id}/${action}`);
+      setUsers(prev => prev.map(u => u._id === user._id ? { ...u, isActive: !user.isActive } : u));
+      toast.success(`User ${user.isActive ? 'deactivated' : 'activated'} successfully`);
+    } catch (error) {
+      toast.error('Failed to update user status');
     }
   };
 
@@ -187,6 +200,21 @@ const Users = () => {
                     <FaUserPlus className="w-4 h-4" />
                   )}
                   <span>{followingStates[user._id] ? 'Following' : 'Follow'}</span>
+                </button>
+              )}
+              {/* Admin Remove/Activate Button */}
+              {currentUser && currentUser.role === 1 && user.role === 2 && currentUser._id !== user._id && (
+                <button
+                  onClick={() => handleToggleActive(user)}
+                  className={`w-full flex items-center justify-center space-x-2 px-4 py-2 rounded-lg font-medium mt-2 transition-colors ${
+                    user.isActive
+                      ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                      : 'bg-green-100 text-green-700 hover:bg-green-200'
+                  }`}
+                  title={user.isActive ? 'Deactivate user' : 'Activate user'}
+                >
+                  {user.isActive ? <FaUserSlash className="w-4 h-4" /> : <FaUserShield className="w-4 h-4" />}
+                  <span>{user.isActive ? 'Remove' : 'Activate'}</span>
                 </button>
               )}
             </div>
